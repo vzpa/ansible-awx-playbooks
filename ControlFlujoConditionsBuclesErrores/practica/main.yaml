@@ -3,7 +3,7 @@
   hosts: all
   vars_files:
      - software_rocky.yaml
-     - software_debian.yaml
+     - software_ubuntu.yaml
 
   tasks:
 
@@ -12,13 +12,13 @@
       update_cache: yes
       
 
-    when: ansible_distribution=='Debian'
-  - name: Instalar debian
+    when: ansible_distribution=='ubuntu'
+  - name: Instalar ubuntu
     ansible.builtin.apt:
       name: "{{item}}"
       state: present
-    loop: "{{software_debian}}"
-    when: ansible_distribution=='Debian' 
+    loop: "{{software_ubuntu}}"
+    when: ansible_distribution=='ubuntu' 
   
   
   - name: Instalar rocky
