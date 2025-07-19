@@ -1,0 +1,17 @@
+#### PLAY PARA CREAR UN SERVIDOR POSTGRES
+---
+- name: Configuración de servidor de base de datos PostgreSQL
+  hosts: debian1
+  roles:
+     - postgres
+
+  pre_tasks:
+  - name: Lanzar PLAY
+    ansible.builtin.debug:
+      msg: "play"
+  
+  - name: actualizar repositorios
+    ansible.builtin.apt:
+      update_cache: yes
+    when: ansible_facts['distribution'] | lower == 'debian'
+

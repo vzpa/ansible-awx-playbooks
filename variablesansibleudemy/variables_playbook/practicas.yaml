@@ -1,0 +1,19 @@
+---
+- name: Prueba con Variables
+  hosts: debian1
+  vars:
+    mensaje: 
+      empresa: THis a PC LInux
+      curso: ansible desde cero
+      nivel: alto
+      responsables: 
+        - pedro
+        - juan
+        - pablo
+
+  tasks:
+  - name: Mensaje de bienvenida
+    copy:
+    
+      content: "{{mensaje.responsables}} y segundo responsable {{mensaje.responsables[1]}}"
+      dest: /etc/motd

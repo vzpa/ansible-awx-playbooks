@@ -1,0 +1,44 @@
+---
+
+- name: Trabajar con vOLUMENES LOGICOS
+  hosts: rockyserver
+
+  tasks:
+  
+  - name: Crear una particion en el disco nvme0n2
+    community.general.parted:
+      device: /dev/nvme0n2
+      number: 1
+      part_end: 5GiB
+      state: present
+
+  - name: Ver el disco
+    community.general.parted:
+      device: /dev/nvme0n2
+      state: info
+    register: datos
+
+
+  - name: Visualizar resultado
+    ansible.builtin.debug:
+      var: datos  
+      
+  - name: Crear una particion en el disco nvme0n3
+    community.general.parted:
+      device: /dev/nvme0n3
+      number: 1
+      part_end: 5GiB
+      state: present
+
+  - name: Ver el disco
+    community.general.parted:
+      device: /dev/nvme0n3
+      state: info
+    register: datos1
+
+
+  - name: Visualizar resultado
+    ansible.builtin.debug:
+      var: datos1
+
+  

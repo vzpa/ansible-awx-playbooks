@@ -1,0 +1,24 @@
+---
+- name: Crear directorios para usuarios desde archivo encriptado
+  hosts: debian2
+  vars_files:
+    - usuarios_practica_encriptados.yaml
+  
+  tasks:
+
+    - name: Crear usuario si no existe
+      ansible.builtin.user:
+        name: "{{ item }}"
+        home: "/home/{{ item }}"
+        shell: /bin/bash
+        create_home: yes
+      loop: "{{ usuarios }}"
+    - name: Crear directorios de usuarios en /home
+      ansible.builtin.file:
+        path: "/home/{{ item }}"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: '0755'
+      loop: "{{ usuarios }}"
+      

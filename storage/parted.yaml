@@ -1,0 +1,19 @@
+---
+
+- name: Trabajar con el módulos parted
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  tasks:
+
+  - name: Ver datos de sdb
+    community.general.parted:
+      device: /dev/sda
+      state: info
+    register: datos
+      
+
+  - name: Visualizar datos de la particion
+    ansible.builtin.debug:
+      var: datos

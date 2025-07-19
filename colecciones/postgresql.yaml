@@ -1,0 +1,11 @@
+---
+- name: instalar NodeJS
+  hosts: debian1
+
+  roles:
+    - geerlingguy.postgresql
+  
+  pre_tasks:
+    - name: Instalar PostgreSQL
+      ansible.builtin.debug:
+        msg: "Instalando PostgreSQL en a traves de la role geerlingguy.postgresql de Ansible Galaxy"

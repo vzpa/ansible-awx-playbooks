@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Orbitron', sans-serif;
+  color: #00f0ff;
+  background-color: #0d0d0d;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.background-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(120deg, #0d0d0d, #1a1a1a, #0d0d0d);
+  background-size: 400% 400%;
+  z-index: -1;
+  animation: animateBackground 30s linear infinite;
+  opacity: 0.2;
+}
+
+@keyframes animateBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+header {
+  text-align: center;
+  margin-top: 40px;
+}
+
+header h1 {
+  font-size: 3em;
+  color: #00f0ff;
+  text-shadow: 0 0 15px #00f0ff;
+}
+
+.slogan {
+  font-size: 1.3em;
+  color: #12ffac;
+  margin-top: 10px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.button-group .btn {
+  background: transparent;
+  border: 2px solid #00f0ff;
+  color: #00f0ff;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-size: 1em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px #00f0ff33;
+}
+
+.button-group .btn:hover {
+  background: #00f0ff;
+  color: #0d0d0d;
+  box-shadow: 0 0 15px #00f0ff;
+}
+
+.welcome {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  color: #c7f9ff;
+  font-size: 1.2em;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #00f0ff;
+  border-right: 3px solid #00f0ff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px #00f0ff33;
+}

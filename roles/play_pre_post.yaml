@@ -1,0 +1,22 @@
+---
+- name: Ejemplos de un role con handlers y files
+  hosts: debian1
+  roles:
+     - mariadb
+  
+  
+  pre_tasks:
+  - name: Hacer un Upgrade del sistema
+    ansible.builtin.apt:
+      update_cache: true
+  
+  tasks:
+
+  - name: Ultima tarea del PLAY
+    ansible.builtin.debug:
+      msg: "Se ha instalado el software {{software}}"
+
+  post_tasks:
+  - name: Informar de finalzación
+    ansible.builtin.debug:
+      msg: "Proceso Terminado"

@@ -1,0 +1,44 @@
+---
+- name: Trabajar con ficheros
+  hosts: debian
+  vars:
+    - fichero: "/tmp/prueba1.txt"
+      
+  tasks:
+  - name: Crear un fichero vacío
+    file:
+      path: "{{fichero}}"
+      state: "touch"
+
+  - name: Borrar el fichero anterior
+    file: 
+      path: "/tmp/prueba.txt"
+      state: "absent"
+
+  - name: cambiar permisos y propoetario
+    file:
+      path: "{{fichero}}"
+      owner: ansible
+      group: ansible
+      mode: "0777"
+  
+- name: Trabajar con directorios
+  hosts: rocky
+  vars:
+    directorio: /tmp/dir1
+    
+  tasks:
+  - name: Crear directorio
+    file:
+      path: "{{directorio}}"
+      state: directory
+      mode: '0755'
+  - name: Crear fichero
+    file:
+      path: "{{directorio}}/p1.txt"
+      state: touch
+  - name: borrar recursivo
+    file:
+      path: "{{directorio}}"
+      state: absent
+...

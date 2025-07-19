@@ -1,0 +1,7 @@
+    ansible_host: cambiar el nombre de la máquina
+ansible_port: puerto de conexión, normalmente si es distinto del 22.
+ansible_user: usuario de conexión
+ansible_become: permite escalar privilegios
+ansible_become_user: usuario de escalada
+ansible_python_interpreter: indicar la ruta en la que se encuentra Python.
+etc.... 

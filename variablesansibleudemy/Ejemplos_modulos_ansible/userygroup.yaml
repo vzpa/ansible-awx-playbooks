@@ -1,0 +1,19 @@
+---
+- name: Trabajar con usuarios
+  hosts: debian
+
+  tasks:
+  - name: Crear un usuario basico
+    user:
+      name: usuario1
+
+  - name: Crear un grupo basico
+    group:
+      name: grupo1
+      state: present
+  - name: Crear un usuario del grupo 1
+    user:
+      name: usuario2
+      group: grupo1
+      shell: /bin/bash
+      home: /home/user2

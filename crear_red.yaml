@@ -1,0 +1,24 @@
+---
+- name: Descargar imagen Docker
+  hosts: localhost
+  become: true
+
+  
+
+  tasks:
+  - name: Crear una red de Docker
+    community.docker.docker_network:
+      name: red1
+      ipam_config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+
+  - name: Crear contenedor en red (asociado a la red)
+    community.docker.docker_container:
+      name: nginx1
+      image: nginx 
+      ports:
+        - 9091:80
+      networks:
+        - name: red1 
+      detach: true

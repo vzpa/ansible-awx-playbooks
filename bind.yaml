@@ -1,0 +1,33 @@
+---
+- name: Desplegar sitio web IT en Nginx con volumen bind
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Crear directorio local si no existe
+      file:
+        path: /datos
+        state: directory
+
+    - name: Crear contenedor Nginx
+      community.docker.docker_container:
+        name: nginx3
+        image: nginx
+        ports:
+          - "9191:80"
+        detach: true
+        volumes:
+          - "/datos:/usr/share/nginx/html"
+
+    - name: Copiar todos los archivos del sitio
+      copy:
+        src: "{{ item }}"
+        dest: /datos/{{ item }}
+      loop:
+        - index.html
+        - style.css
+        - script.js
+        - favicon.ico
+        - servicios.html
+        - portafolio.html
+        - contacto.html

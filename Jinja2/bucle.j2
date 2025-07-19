@@ -1,0 +1,46 @@
+{# Se utilizan las mismas que en Ansible 
+   loop con una coleccion
+
+   for variable in Lista
+   endfo 
+
+#}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Productos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color:rgb(0, 0, 0);
+            color: #333;
+        }
+        h1, h2 {
+            color:rgb(9, 255, 0);
+        }
+        ol {
+            padding-left: 1.5rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Estoy en un bucle</h1>
+
+    <h2>Lista de productos</h2>
+    {% if productos %}
+        <ol>
+        {% for producto in productos %}
+            <li>{{ producto }}</li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No hay productos disponibles.</p>
+    {% endif %}
+</body>
+</html>

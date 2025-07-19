@@ -1,0 +1,20 @@
+---
+- name: Trabajar con JINJA2. Montar APACHE
+  hosts: 
+      - debian1
+  vars:
+      software: git
+      version:  2
+  tasks:
+  - name: Actualizar repositorios
+    ansible.builtin.apt:
+      update_cache: yes
+  - name: Instalar {{software}}
+    ansible.builtin.apt:
+      name: "{{software}}"
+      state: present
+      
+  - name: copiar resultado
+    ansible.builtin.template:
+     src: operadores_logicos.j2
+     dest: /tmp/resultado.txt

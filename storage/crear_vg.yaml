@@ -1,0 +1,22 @@
+---
+
+- name: Trabajar con vOLUMENES LOGICOS
+  hosts: rockyserver
+
+  tasks:
+  
+  - name: Crear un Volume Group en las particiones
+    community.general.lvg:
+      vg: grupo1
+      pvs:
+        - /dev/nvme0n2p1
+        - /dev/nvme0n3p1
+
+  - name: Recuperar informacion de los vg
+    ansible.builtin.shell:
+      cmd: 'vgdisplay | grep "VG Name"'
+    register: datos
+
+  - name: Ver informacion
+    ansible.builtin.debug:
+      var: datos

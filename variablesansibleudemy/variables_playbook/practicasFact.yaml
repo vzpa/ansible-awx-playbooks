@@ -1,0 +1,20 @@
+---
+- name: variables FACT
+  hosts: servidores_de_aplicaciones
+
+  tasks:
+  - name: Ver la memoria de la maquina
+    ansible.builtin.debug:
+      msg: "La memoria es {{ansible_facts['memfree_mb']}}"
+  
+  - name: Ver el gateway de la maquina
+    ansible.builtin.debug:
+      msg: "el gateway de la maquina es:{{ansible_facts.default_ipv4.gateway}}"
+  
+  - name: Ver los dos primeros procesadores
+    ansible.builtin.debug:
+      msg: "Los dos primeros procesadores son: {{ansible_facts['processor'][0:2]}}"
+  
+  - name: Ver información completa de la memoria
+    ansible.builtin.debug:
+      msg: "Información completa de la memoria{{ansible_facts['memory_mb']}}"

@@ -1,0 +1,31 @@
+---
+
+- name: Trabajar con el módulos parted
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+
+  tasks:
+   
+  - name: Crear una particion en sdb
+    community.general.parted:
+      device: /dev/sdb
+      number: 1
+      part_end: 5GiB
+      state: present
+   
+
+  
+  - name: Ver datos de sdb
+    community.general.parted:
+      device: /dev/sdb
+      state: info
+    register: datos
+      
+  - name: ver los datos
+    ansible.builtin.debug:
+      var: datos
+
+   
+ 

@@ -1,0 +1,22 @@
+---
+- name: Prueba con Variables
+  hosts: debian1
+  vars:
+    v1: "1"
+    
+  tasks:
+  - name: Variable local
+    vars:
+      v1: "2"
+    debug:
+      msg: "Este valor es local {{v1}}"
+
+  - name: Variable local 2
+    vars:
+       v1: "3"
+    debug:
+      msg: "Este valor es local {{v1}}"
+  
+  - name: Variable local 3
+    debug:
+      msg: "Este valor es local {{v1}}"

@@ -1,0 +1,9 @@
+---
+- name: Instalar software
+  hosts: debian1
+
+  tasks:
+  - name: Realizar la instalación
+    apt:
+        name: "{{software}}"
+        state: present

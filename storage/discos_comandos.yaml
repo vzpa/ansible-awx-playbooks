@@ -1,0 +1,17 @@
+---
+- name: ver datos de los discos con comandos
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  tasks:
+
+  - name: Ver los discos a través de comandos
+    ansible.builtin.shell:
+      cmd:  ls -l /dev/sd*
+    register: discos
+
+  - name: Visualizar discos y particiones
+    ansible.builtin.debug:
+      msg: "{{discos.stdout | split('\n')}}"
+ 

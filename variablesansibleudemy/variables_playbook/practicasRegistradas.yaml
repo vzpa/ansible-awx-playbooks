@@ -1,0 +1,27 @@
+---
+- name: Variables registradas
+  hosts: rocky
+
+  tasks:
+  - name: Realizar la instalación de mysql
+    yum:
+      name: mysql-server
+      state: present
+    register: instalar_mysql
+
+  - name: visualización del resultado de instalar mysql
+    ansible.builtin.debug:
+      var: instalar_mysql
+  
+  - name: arrancar mysql
+    service:
+      name: mysqld
+      state: started
+    register: arrancar_mysql
+  - name: visualización del resultado de iniciar mysql
+    ansible.builtin.debug:
+      var: arrancar_mysql
+
+  - name: consumo de memoria por mysql
+    ansible.builtin.debug:
+      var: arrancar_mysql.status.MemoryCurrent

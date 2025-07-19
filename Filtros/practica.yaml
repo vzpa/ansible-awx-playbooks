@@ -1,0 +1,36 @@
+#1. Transformar un diccionario en una lista
+#o Vamos a usar un filtro para transformar un diccionario en una
+#lista.
+#o El filtro se denomina “dict2items”. Mirar la doc de Ansible para ver
+#su funcionamiento
+#o Crear un playbook con el siguiente diccionario llamado “entorno” y
+#usar el filtro para crear una lista
+#▪ Proyecto: desarrollo
+#▪ Responsable: Pedro
+#▪ Personas: 10
+#▪ Sistema: Linux
+
+---
+- name: Ejemplos varios de filtros con diccionarios
+  hosts: debian1
+  vars:
+    entorno:
+      proyecto: desarrollo
+      responsable: Pedro
+      personas: 10
+      sistema: Linux
+
+  tasks:
+
+  - name: Transformar diccionario en lista
+    ansible.builtin.debug:
+      var: entorno | dict2items
+  
+  - name: Mostrar lista transformada
+    ansible.builtin.debug:
+      msg: "{{ entorno | dict2items }}"
+  
+  - name: Mostrar tipo de la lista
+    ansible.builtin.debug:
+      var: (entorno | dict2items) | type_debug
+    

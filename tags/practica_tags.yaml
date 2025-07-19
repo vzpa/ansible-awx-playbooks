@@ -1,0 +1,54 @@
+---
+- name: Practica con TAGS
+  hosts: debian,rocky
+
+
+  tasks:
+
+  - name: Instalar apache en debian
+    ansible.builtin.apt:
+      name: apache2
+      state: present
+    tags:
+      - debian
+    
+  - name: Instalar apache en rocky
+    ansible.builtin.dnf:
+      name: httpd
+      state: present
+    tags:
+      - rocky
+  
+  - name: Arrancar apache en debian
+    ansible.builtin.service:
+      name: apache2
+      state: started
+    tags:
+      - debian
+  
+  - name: Arrancar apache en rocky
+    ansible.builtin.service:
+      name: httpd
+      state: started
+    tags:
+      - rocky
+  
+  - name: copiar HTML en rocky 
+    ansible.builtin.copy:
+      src: /home/ansible/ansibleudemy/tags/index_rocky.html
+      dest: /var/www/html/index.html
+    tags:
+      - rocky
+  
+  - name: copiar HTML en debian
+    ansible.builtin.copy:
+      src: /home/ansible/ansibleudemy/tags/index_debian.html
+      dest: /var/www/html/index.html
+    tags:
+      - debian 
+  
+  - name: Aviso de fin de proceso
+    ansible.builtin.debug:
+      msg: "Proceso de instalacion y configuracion de apache finalizado"
+    tags:
+      - always

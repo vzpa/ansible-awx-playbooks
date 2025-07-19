@@ -1,0 +1,11 @@
+---
+- name: Trabajar con windows. Desinstalar software
+  hosts: 
+      - 192.168.99.19
+  
+  tasks:
+
+  - name: Desinstalar Git ejecutando desinstalador directamente
+    ansible.windows.win_command: |
+      "C:\Program Files\Git\unins000.exe" /VERYSILENT /NORESTART
+    ignore_errors: yes

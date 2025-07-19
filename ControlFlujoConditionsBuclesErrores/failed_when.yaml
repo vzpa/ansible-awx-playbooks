@@ -1,0 +1,14 @@
+---
+- name: Control de errores. Failed When
+  hosts: debian1
+  
+  tasks: 
+  - name: Localizar directorio temporal
+    ansible.builtin.command:
+      cmd: ls -l /temporal_no_debe_existir
+    register: salida
+    failed_when: salida.rc==0 #Falle cuando el rc es 0, es decir, cuando el directorio existe
+
+  - name: visualizar salida
+    ansible.builtin.debug:
+      var: salida

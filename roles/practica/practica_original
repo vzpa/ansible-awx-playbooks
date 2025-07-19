@@ -1,0 +1,58 @@
+#### PLAY PARA CREAR UN SERVIDOR POSTGRES
+---
+- name: Configuración de servidor de base de datos PostgreSQL
+  hosts: debian1
+  become: true
+
+  tasks:
+    - name: Instalar PostgreSQL
+      apt:
+        name: postgresql
+        state: latest
+
+    - name: Crear el directorio para la Base de Datos
+      ansible.builtin.file:
+        path: /datos
+        state: directory
+    
+    - name: dar permisos de usuario y grupo al directorio
+      ansible.builtin.file:
+        path: /datos
+        owner: postgres
+        group: postgres
+        state: directory
+   
+
+    - name: Inicializar la base de datos de PostgreSQL  en el directorio creado anteriormente
+      become_user: postgres
+      command: /usr/lib/postgresql/13/bin/initdb -D /datos
+
+    - name: Habilitar PostgreSQL en el arranque del sistema
+      service:
+        name: postgresql
+        enabled: true
+        state: started
+
+    - name: Copiar script para crear usuario y BBDD
+      ansible.builtin.copy:
+        src: crear_bd_usu.sql
+        dest: /tmp/crear_bd_usu.sql
+        owner: postgres
+        group: postgres
+        mode: '0744'
+
+    - name: Lanzar script para Crear un usuario y una base de datos
+      become_user: postgres
+      ansible.builtin.shell:
+        cmd: /tmp/crear_bd_usu.sql
+      notify: reiniciar  
+    
+  handlers:
+  - name: reiniciar
+    service:
+        name: postgresql
+        state: restarted
+
+
+
+  

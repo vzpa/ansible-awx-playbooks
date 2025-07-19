@@ -1,0 +1,14 @@
+---
+- name: Trabajar con windows. Variables FACT
+  hosts:
+      - 192.168.99.19
+  
+  tasks:
+
+  - name: Distribución
+    debug:
+      var:  ansible_facts['distribution']
+  
+  - name: Memoeira libre
+    debug:
+      var:  ansible_facts['memfree_mb']

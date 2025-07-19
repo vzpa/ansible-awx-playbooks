@@ -1,0 +1,4 @@
+---
+# defaults file for mariadb
+software: mariadb-server
+servicio: mariadb

@@ -1,0 +1,29 @@
+---
+- name: Trabajar con windows
+  hosts: 
+    - all
+
+  tasks:
+    - name: Copy files to Windows
+      ansible.windows.win_copy:
+        src: fichero.txt
+        dest: C:\temp2\fichero.txt
+      register: copy_result
+
+    - name: Copy files to Windows
+      ansible.windows.win_copy:
+        content: Este es un fichero de texto
+        dest: C:\temp2\fichero1.txt
+      register: copy1_result
+    
+    - name: Display copy result
+      ansible.builtin.debug:
+        var: copy_result
+      register: 
+        copy_result
+
+    - name: Display copy result1
+      ansible.builtin.debug:
+        var: copy1_result
+      register: 
+        copy1_result

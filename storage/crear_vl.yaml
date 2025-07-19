@@ -1,0 +1,24 @@
+---
+
+- name: Trabajar con vOLUMENES LOGICOS
+  hosts: rockyserver
+
+  tasks:
+  - name: Crear un volumen logico en el grupo grupo1
+    community.general.lvol:
+      vg: grupo1
+      lv: vol1
+      size: 512
+
+ 
+  - name: Recuperar informacion de los volumenes logicos
+    ansible.builtin.shell: 
+     cmd: 'lvdisplay | grep "LV Name"'
+    register: datos
+      
+  - name: ver los datos
+    ansible.builtin.debug:
+      var: datos.stdout_lines
+
+  
+ 

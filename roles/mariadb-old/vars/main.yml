@@ -1,0 +1,9 @@
+---
+# vars file for mariadb
+software: nginx
+servicio: nginx
+
+#Precedencia de variables:
+# vars del role
+# vars del play
+# vars de defaults del role

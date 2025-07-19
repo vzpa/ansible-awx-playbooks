@@ -1,0 +1,24 @@
+[debian]
+debian1
+debian2
+
+[rocky]
+rocky1
+rocky2
+
+[ubuntu]
+ubuntu1 puerto=9090 
+
+[servidores_de_datos]
+mysql1
+
+[servidores_de_aplicaciones]
+tomcat1
+tomcat2
+
+#[desarrollo:children]
+#debian
+#ubuntu
+
+#[desarrollo:vars]
+#ansible_user=pepe

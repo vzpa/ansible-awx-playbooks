@@ -1,0 +1,29 @@
+---
+- name: Descargar imagen Docker
+  hosts: localhost
+  become: true
+  
+
+  tasks:
+  - name: Crear un contenedor en backgroud
+    community.docker.docker_container:
+      name: contenedor_tomcat
+      image: mi-tomcat
+      state: started
+      detach: true
+  
+  - name: Borrar el contenedor
+    community.docker.docker_container:
+      name: contenedor_tomcat
+      state: absent
+
+  - name: Crear tomcat con puertos asociados
+    community.docker.docker_container:
+      name: contenedor_tomcat
+      state: started
+      detach: true
+      image: mi-tomcat
+      ports:
+        - 9000:8080
+
+  

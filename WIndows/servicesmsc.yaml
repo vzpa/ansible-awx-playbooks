@@ -1,0 +1,16 @@
+---
+- name: Trabajar con windows. Prar servicio
+  hosts: 
+      - 192.168.99.19
+  
+  tasks:
+
+  - name: Parar servicio de GeoLocation
+    ansible.windows.win_service:
+      name: lfsvc
+      state: stopped
+
+  - name: Arrancar servicio de Audio
+    ansible.windows.win_service:
+      name: lfsvc
+      state: started

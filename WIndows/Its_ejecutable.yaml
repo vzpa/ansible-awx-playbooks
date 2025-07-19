@@ -1,0 +1,32 @@
+---
+- name: Trabajar con windows. instalar un paquete 
+  hosts: 
+    - 192.168.99.19
+
+  tasks:
+    - name: Descargar 7zip
+      ansible.windows.win_get_url:
+        url: https://www.7-zip.org/a/7z2201-x64.exe
+        dest: C:\temp2\7z2201-x64.exe
+  
+
+    - name: Instalar 7zip
+      ansible.windows.win_package:
+        path: C:\temp2\7z2201-x64.exe
+        state: present
+        arguments: '/S /D="C:\Program Files\7-Zip"'
+
+
+    - name: Descargar GIT
+      ansible.windows.win_get_url:
+        url: https://github.com/git-for-windows/git/releases/download/v2.40.0.windows.1/Git-2.40.0-64-bit.exe
+        dest: c:\temp2\git.exe
+
+    - name: Instalar  GIT
+      ansible.windows.win_package:
+        path: c:\temp2\git.exe
+        state: present
+        arguments: 
+          - /VERYSILENT
+          - /NORESTART
+...

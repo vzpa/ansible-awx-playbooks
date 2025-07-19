@@ -1,0 +1,15 @@
+---
+
+- name: Crear un sistema de ficheros
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  tasks:
+  
+  - name: Crear sistema de ficheros
+    community.general.filesystem:
+      dev: /dev/sdb1
+      fstype: ext4
+      state: present
+      

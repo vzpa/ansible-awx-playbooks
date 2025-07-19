@@ -1,0 +1,11 @@
+---
+- name: Prueba con Variables
+  hosts: debian1
+  vars: 
+      mensaje: "Primer Mensaje de prueba"
+      curso: "del curso de Udemy Ansible desde cero"
+
+  tasks:
+  - name: Ver variables
+    debug:
+      msg: "En este caso es : {{mensaje}} {{curso}}"
