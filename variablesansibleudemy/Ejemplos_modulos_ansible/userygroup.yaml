@@ -1,6 +1,6 @@
 ---
 - name: Trabajar con usuarios
-  hosts: maquinas
+  hosts: 192.168.99.22,192.168.99.36
 
   tasks:
   - name: Crear un usuario basico
