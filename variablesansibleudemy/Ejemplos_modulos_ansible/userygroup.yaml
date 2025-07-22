@@ -1,7 +1,6 @@
 ---
 - name: Trabajar con usuarios
   hosts: Desarrollo
-  become: yes
 
   tasks:
   - name: Crear un usuario basico
