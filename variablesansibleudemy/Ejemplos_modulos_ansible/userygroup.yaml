@@ -1,8 +1,6 @@
 ---
 - name: Trabajar con usuarios
-  hosts: 
-    -  192.168.99.22
-    -  192.168.99.36
+  hosts: all
 
   tasks:
   - name: Crear un usuario basico
