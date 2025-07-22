@@ -1,6 +1,6 @@
 ---
 - name: Trabajar con usuarios
-  hosts: maquinas
+  hosts: Desarrollo
   become: yes
 
   tasks:
