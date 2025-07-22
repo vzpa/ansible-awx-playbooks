@@ -1,6 +1,6 @@
 ---
 - name: Trabajar con usuarios
-  hosts: all
+  hosts: maquinas
 
   tasks:
   - name: Crear un usuario basico
