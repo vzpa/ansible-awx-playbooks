@@ -1,7 +1,7 @@
 ---
 # Playbook para instalar Lynis en Rocky Linux
 - name: Instalar y configurar Lynis en Rocky Linux
-  hosts: Desarrollo
+  hosts: rocky_servers
   become: yes
   vars:
     lynis_version: "3.0.9"
@@ -18,6 +18,7 @@
         update_cache: yes
       tags: update
 
+    # Instalar paquetes base necesarios
     - name: Instalar paquetes base necesarios
       dnf:
         name:
@@ -25,6 +26,7 @@
           - tar
           - gzip
           - git
+          - rsync
         state: present
       tags: dependencies
 
@@ -90,14 +92,30 @@
         creates: "/tmp/lynis-{{ lynis_version }}"
       tags: extract
 
+    - name: Verificar contenido extraído
+      find:
+        paths: "/tmp/lynis-{{ lynis_version }}"
+        file_type: directory
+      register: extracted_dirs
+      tags: extract
+
+    - name: Mostrar directorios extraídos
+      debug:
+        msg: "Directorios encontrados: {{ extracted_dirs.files | map(attribute='path') | list }}"
+      tags: extract
+
     - name: Copiar archivos de Lynis al directorio de instalación
-      copy:
-        src: "/tmp/lynis-{{ lynis_version }}/"
-        dest: "{{ lynis_home }}/"
-        remote_src: yes
+      shell: |
+        cp -rf /tmp/lynis-{{ lynis_version }}/* {{ lynis_home }}/
+        cp -rf /tmp/lynis-{{ lynis_version }}/.* {{ lynis_home }}/ 2>/dev/null || true
+      tags: install
+
+    - name: Cambiar propietario de archivos de Lynis
+      file:
+        path: "{{ lynis_home }}"
         owner: "{{ lynis_user }}"
         group: "{{ lynis_group }}"
-        mode: preserve
+        recurse: yes
       tags: install
 
     - name: Hacer ejecutable el script principal de Lynis
@@ -171,6 +189,22 @@
       tags: cleanup
 
     # Verificar instalación
+    - name: Verificar estructura de directorios de Lynis
+      stat:
+        path: "{{ item }}"
+      register: lynis_dirs
+      loop:
+        - "{{ lynis_home }}/include"
+        - "{{ lynis_home }}/db"
+        - "{{ lynis_home }}/plugins"
+      tags: verify
+
+    - name: Mostrar directorios encontrados
+      debug:
+        msg: "Directorio {{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
+      loop: "{{ lynis_dirs.results }}"
+      tags: verify
+
     - name: Verificar instalación de Lynis
       command: "{{ lynis_home }}/lynis --version"
       register: lynis_version_output
