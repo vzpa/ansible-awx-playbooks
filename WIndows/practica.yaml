@@ -19,9 +19,9 @@
  
   - name: Configurar apache para poder arrancarlo
     community.windows.win_lineinfile:
-     path: C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf
-     regex: '^ServerAdmin '
-     line: 'ServerAdmin admin@miempresa.com'  
+      path: C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf
+      regex: '^ServerAdmin '
+      line: 'ServerAdmin admin@miempresa.com'  
  
   - name: Convertir Apache en un servicio
     ansible.windows.win_command:  
