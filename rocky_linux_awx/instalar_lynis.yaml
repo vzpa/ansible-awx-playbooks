@@ -1,7 +1,7 @@
 ---
 # Playbook para instalar Lynis en Rocky Linux
 - name: Instalar y configurar Lynis en Rocky Linux
-  hosts: Desarrollo
+  hosts: rocky_servers
   become: yes
   vars:
     lynis_version: "3.0.9"
@@ -97,23 +97,6 @@
         paths: "/tmp/lynis-{{ lynis_version }}"
         file_type: directory
       register: extracted_dirs
-      tags: extract
-
-    - name: Verificar archivos críticos en tmp
-      stat:
-        path: "{{ item }}"
-      register: tmp_critical_files
-      loop:
-        - "/tmp/lynis-{{ lynis_version }}/lynis"
-        - "/tmp/lynis-{{ lynis_version }}/include"
-        - "/tmp/lynis-{{ lynis_version }}/include/functions"
-        - "/tmp/lynis-{{ lynis_version }}/db"
-      tags: extract
-
-    - name: Mostrar estado de archivos críticos en tmp
-      debug:
-        msg: "Archivo {{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
-      loop: "{{ tmp_critical_files.results }}"
       tags: extract
 
     - name: Mostrar directorios extraídos
