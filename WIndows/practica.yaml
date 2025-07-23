@@ -13,11 +13,10 @@
       path: c:\temp2\apache.msi
       state: present
 
-  - name: Configurar apache para poder arrancarlo
-    ansible.windows.win_lineinfile:
-      path: 'C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf'
-      regex: '^ServerAdmin '
-      line: 'ServerAdmin admin@miempresa.com'
+  - name: Configurar apache para poder arrancarlo (alternativa)
+    ansible.windows.win_shell: |
+      (Get-Content 'C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf') -replace '^ServerAdmin .*', 'ServerAdmin admin@miempresa.com' | Set-Content 'C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf'
+
 
   - name: Convertir Apache en un servicio
     ansible.windows.win_command:  
