@@ -1,27 +1,218 @@
 ---
-- name: Instalar Lynis desde el repositorio oficial de CISOfy
-  hosts: Desarrollo
+# Playbook para instalar Lynis en Rocky Linux
+- name: Instalar y configurar Lynis en Rocky Linux
+  hosts: rocky_servers
   become: yes
+  vars:
+    lynis_version: "3.0.9"
+    lynis_user: "lynis"
+    lynis_group: "lynis"
+    lynis_home: "/opt/lynis"
+    lynis_config_dir: "/etc/lynis"
+    lynis_log_dir: "/var/log/lynis"
+
   tasks:
-
-    - name: Instalar yum-utils (para yum-config-manager)
+    # Actualizar el sistema
+    - name: Actualizar cache de paquetes
       dnf:
-        name: yum-utils
-        state: present
+        update_cache: yes
+      tags: update
 
-    - name: Agregar repositorio oficial de Lynis
-      command: >
-        yum-config-manager
-        --add-repo https://packages.cisofy.com/community/lynis/rpm/
-      args:
-        creates: /etc/yum.repos.d/packages_cisofy_com_community_lynis_rpm_.repo
-
-    - name: Importar clave GPG de CISOfy
-      rpm_key:
-        state: present
-        key: https://packages.cisofy.com/keys/cisofy-software.asc
-
-    - name: Instalar Lynis desde el repositorio de CISOfy
+    - name: Instalar paquetes base necesarios
       dnf:
-        name: lynis
+        name:
+          - wget
+          - tar
+          - gzip
+          - git
         state: present
+      tags: dependencies
+
+    # Crear usuario y grupo para Lynis
+    - name: Crear grupo lynis
+      group:
+        name: "{{ lynis_group }}"
+        state: present
+      tags: user_setup
+
+    - name: Crear usuario lynis
+      user:
+        name: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+        home: "{{ lynis_home }}"
+        shell: /bin/bash
+        system: yes
+        create_home: no
+        state: present
+      tags: user_setup
+
+    # Crear directorios necesarios
+    - name: Crear directorio de instalación de Lynis
+      file:
+        path: "{{ lynis_home }}"
+        state: directory
+        owner: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+        mode: '0755'
+      tags: directories
+
+    - name: Crear directorio de configuración
+      file:
+        path: "{{ lynis_config_dir }}"
+        state: directory
+        owner: root
+        group: "{{ lynis_group }}"
+        mode: '0750'
+      tags: directories
+
+    - name: Crear directorio de logs
+      file:
+        path: "{{ lynis_log_dir }}"
+        state: directory
+        owner: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+        mode: '0755'
+      tags: directories
+
+    # Descargar e instalar Lynis
+    - name: Descargar Lynis desde GitHub
+      get_url:
+        url: "https://github.com/CISOfy/lynis/archive/{{ lynis_version }}.tar.gz"
+        dest: "/tmp/lynis-{{ lynis_version }}.tar.gz"
+        mode: '0644'
+      tags: download
+
+    - name: Extraer archivo de Lynis
+      unarchive:
+        src: "/tmp/lynis-{{ lynis_version }}.tar.gz"
+        dest: "/tmp"
+        remote_src: yes
+        creates: "/tmp/lynis-{{ lynis_version }}"
+      tags: extract
+
+    - name: Copiar archivos de Lynis al directorio de instalación
+      copy:
+        src: "/tmp/lynis-{{ lynis_version }}/"
+        dest: "{{ lynis_home }}/"
+        remote_src: yes
+        owner: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+        mode: preserve
+      tags: install
+
+    - name: Hacer ejecutable el script principal de Lynis
+      file:
+        path: "{{ lynis_home }}/lynis"
+        mode: '0755'
+        owner: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+      tags: permissions
+
+    # Configurar Lynis
+    - name: Copiar archivo de configuración por defecto
+      copy:
+        src: "{{ lynis_home }}/default.prf"
+        dest: "{{ lynis_config_dir }}/custom.prf"
+        remote_src: yes
+        owner: root
+        group: "{{ lynis_group }}"
+        mode: '0640'
+        force: no
+      tags: config
+
+    - name: Configurar parámetros personalizados en custom.prf
+      lineinfile:
+        path: "{{ lynis_config_dir }}/custom.prf"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        create: yes
+      loop:
+        - { regexp: '^config:colored=', line: 'config:colored=yes' }
+        - { regexp: '^config:auditor=', line: 'config:auditor=System Administrator' }
+        - { regexp: '^config:log_file=', line: 'config:log_file={{ lynis_log_dir }}/lynis.log' }
+        - { regexp: '^config:report_file=', line: 'config:report_file={{ lynis_log_dir }}/lynis-report.dat' }
+      tags: config
+
+    # Crear enlace simbólico para uso global
+    - name: Crear enlace simbólico en /usr/local/bin
+      file:
+        src: "{{ lynis_home }}/lynis"
+        dest: "/usr/local/bin/lynis"
+        state: link
+      tags: symlink
+
+    # Configurar logrotate
+    - name: Configurar logrotate para logs de Lynis
+      copy:
+        dest: "/etc/logrotate.d/lynis"
+        content: |
+          {{ lynis_log_dir }}/*.log {
+              daily
+              missingok
+              rotate 30
+              compress
+              delaycompress
+              notifempty
+              create 644 {{ lynis_user }} {{ lynis_group }}
+          }
+        owner: root
+        group: root
+        mode: '0644'
+      tags: logrotate
+
+    # Limpiar archivos temporales
+    - name: Limpiar archivos temporales
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/lynis-{{ lynis_version }}.tar.gz"
+        - "/tmp/lynis-{{ lynis_version }}"
+      tags: cleanup
+
+    # Verificar instalación
+    - name: Verificar instalación de Lynis
+      command: "{{ lynis_home }}/lynis --version"
+      register: lynis_version_output
+      changed_when: false
+      tags: verify
+
+    - name: Mostrar versión instalada
+      debug:
+        msg: "Lynis instalado: {{ lynis_version_output.stdout }}"
+      tags: verify
+
+    # Ejecutar primera auditoría (opcional)
+    - name: Ejecutar primera auditoría de sistema
+      command: "{{ lynis_home }}/lynis audit system --profile {{ lynis_config_dir }}/custom.prf"
+      become_user: "{{ lynis_user }}"
+      register: lynis_audit_result
+      when: run_initial_audit | default(false)
+      tags: 
+        - audit
+        - never
+
+    - name: Mostrar ubicación del reporte
+      debug:
+        msg: |
+          Instalación completada exitosamente!
+          
+          Comandos útiles:
+          - Ejecutar auditoría: lynis audit system
+          - Ver ayuda: lynis --help
+          - Ver versión: lynis --version
+          
+          Archivos importantes:
+          - Ejecutable: {{ lynis_home }}/lynis
+          - Configuración: {{ lynis_config_dir }}/custom.prf
+          - Logs: {{ lynis_log_dir }}/
+          
+          Para ejecutar la primera auditoría:
+          sudo -u {{ lynis_user }} lynis audit system --profile {{ lynis_config_dir }}/custom.prf
+      tags: verify
+
+  handlers:
+    - name: restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
