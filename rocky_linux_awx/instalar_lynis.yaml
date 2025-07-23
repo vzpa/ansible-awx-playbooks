@@ -1,6 +1,6 @@
 ---
 - name: Instalar y ejecutar Lynis en Rocky Linux
-  hosts: desarrollo
+  hosts: Desarrollo
   become: yes
   tasks:
 
