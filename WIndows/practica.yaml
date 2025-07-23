@@ -17,7 +17,7 @@
   
  
   - name: Configurar apache para poder arrancarlo
-    community.windows.win_lineinfile:
+    ansible.windows.win_lineinfile:
       path: C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf
       regex: '^ServerAdmin '
       line: 'ServerAdmin admin@miempresa.com'  
