@@ -92,10 +92,52 @@
         creates: "/tmp/lynis-{{ lynis_version }}"
       tags: extract
 
-    - name: Copiar archivos de Lynis al directorio de instalación
-      shell: |
-        cp -rf /tmp/lynis-{{ lynis_version }}/* {{ lynis_home }}/
-        cp -rf /tmp/lynis-{{ lynis_version }}/.* {{ lynis_home }}/ 2>/dev/null || true
+    - name: Verificar contenido extraído
+      find:
+        paths: "/tmp/lynis-{{ lynis_version }}"
+        file_type: directory
+      register: extracted_dirs
+      tags: extract
+
+    - name: Verificar archivos críticos en tmp
+      stat:
+        path: "{{ item }}"
+      register: tmp_critical_files
+      loop:
+        - "/tmp/lynis-{{ lynis_version }}/lynis"
+        - "/tmp/lynis-{{ lynis_version }}/include"
+        - "/tmp/lynis-{{ lynis_version }}/include/functions"
+        - "/tmp/lynis-{{ lynis_version }}/db"
+      tags: extract
+
+    - name: Mostrar estado de archivos críticos en tmp
+      debug:
+        msg: "Archivo {{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
+      loop: "{{ tmp_critical_files.results }}"
+      tags: extract
+
+    - name: Mostrar directorios extraídos
+      debug:
+        msg: "Directorios encontrados: {{ extracted_dirs.files | map(attribute='path') | list }}"
+      tags: extract
+
+    - name: Limpiar directorio de instalación anterior
+      file:
+        path: "{{ lynis_home }}"
+        state: absent
+      tags: install
+
+    - name: Recrear directorio de instalación
+      file:
+        path: "{{ lynis_home }}"
+        state: directory
+        owner: "{{ lynis_user }}"
+        group: "{{ lynis_group }}"
+        mode: '0755'
+      tags: install
+
+    - name: Copiar archivos de Lynis usando command
+      command: cp -a /tmp/lynis-{{ lynis_version }}/. {{ lynis_home }}/
       tags: install
 
     - name: Cambiar propietario de archivos de Lynis
@@ -177,20 +219,41 @@
       tags: cleanup
 
     # Verificar instalación
-    - name: Verificar estructura de directorios de Lynis
+    - name: Verificar que el directorio include existe
       stat:
-        path: "{{ item }}"
-      register: lynis_dirs
-      loop:
-        - "{{ lynis_home }}/include"
-        - "{{ lynis_home }}/db"
-        - "{{ lynis_home }}/plugins"
+        path: "{{ lynis_home }}/include"
+      register: include_dir
       tags: verify
 
-    - name: Mostrar directorios encontrados
+    - name: Listar contenido del directorio include
+      find:
+        paths: "{{ lynis_home }}/include"
+        patterns: "*"
+      register: include_files
+      when: include_dir.stat.exists
+      tags: verify
+
+    - name: Mostrar archivos en include
       debug:
-        msg: "Directorio {{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
-      loop: "{{ lynis_dirs.results }}"
+        msg: "Archivos en include: {{ include_files.files | map(attribute='path') | list }}"
+      when: include_dir.stat.exists
+      tags: verify
+
+    - name: Verificar archivos críticos de Lynis
+      stat:
+        path: "{{ item }}"
+      register: critical_files
+      loop:
+        - "{{ lynis_home }}/lynis"
+        - "{{ lynis_home }}/include/functions"
+        - "{{ lynis_home }}/include/consts"
+        - "{{ lynis_home }}/db/languages"
+      tags: verify
+
+    - name: Mostrar estado de archivos críticos
+      debug:
+        msg: "Archivo {{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
+      loop: "{{ critical_files.results }}"
       tags: verify
 
     - name: Verificar instalación de Lynis
