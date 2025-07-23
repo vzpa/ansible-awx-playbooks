@@ -8,7 +8,12 @@
       yum:
         name: '*'
         state: latest
-
+        
+    - name: Instalar repositorio EPEL
+      yum:
+        name: epel-release
+        state: present
+        
     - name: Instalar htop
       yum:
         name: htop
