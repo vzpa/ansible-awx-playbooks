@@ -1,7 +1,7 @@
 ---
 # Playbook para instalar Lynis en Rocky Linux
 - name: Instalar y configurar Lynis en Rocky Linux
-  hosts: Desarrollo
+  hosts: rocky_servers
   become: yes
   vars:
     lynis_version: "3.0.9"
@@ -90,18 +90,6 @@
         dest: "/tmp"
         remote_src: yes
         creates: "/tmp/lynis-{{ lynis_version }}"
-      tags: extract
-
-    - name: Verificar contenido extraído
-      find:
-        paths: "/tmp/lynis-{{ lynis_version }}"
-        file_type: directory
-      register: extracted_dirs
-      tags: extract
-
-    - name: Mostrar directorios extraídos
-      debug:
-        msg: "Directorios encontrados: {{ extracted_dirs.files | map(attribute='path') | list }}"
       tags: extract
 
     - name: Copiar archivos de Lynis al directorio de instalación
