@@ -1,8 +1,13 @@
 ---
 - name: Instalar y ejecutar Lynis en Rocky Linux
-  hosts: 192.168.99.22
+  hosts: rocky
   become: yes
   tasks:
+
+    - name: Instalar EPEL (Extra Packages for Enterprise Linux)
+      yum:
+        name: epel-release
+        state: present
 
     - name: Instalar Lynis
       yum:
@@ -17,4 +22,3 @@
     - name: Mostrar resumen de resultados
       debug:
         msg: "{{ lynis_result.stdout_lines }}"
-
