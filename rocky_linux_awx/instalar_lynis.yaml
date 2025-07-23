@@ -1,0 +1,166 @@
+---
+# Playbook de diagnóstico para Lynis
+- name: Diagnóstico completo de instalación Lynis
+  hosts: Desarrollo
+  become: yes
+  vars:
+    lynis_home: "/opt/lynis"
+
+  tasks:
+    - name: Verificar sistema operativo
+      debug:
+        msg: 
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "Kernel: {{ ansible_kernel }}"
+          - "Architecture: {{ ansible_architecture }}"
+
+    - name: Verificar estructura completa del directorio Lynis
+      find:
+        paths: "{{ lynis_home }}"
+        recurse: yes
+        file_type: any
+      register: all_lynis_files
+
+    - name: Mostrar todos los archivos y directorios
+      debug:
+        msg: "{{ all_lynis_files.files | map(attribute='path') | sort }}"
+
+    - name: Verificar permisos del directorio principal
+      stat:
+        path: "{{ lynis_home }}"
+      register: lynis_main_dir
+
+    - name: Mostrar información detallada del directorio principal
+      debug:
+        var: lynis_main_dir.stat
+
+    - name: Verificar si include es un enlace simbólico o directorio
+      stat:
+        path: "{{ lynis_home }}/include"
+      register: include_status
+
+    - name: Mostrar información de include
+      debug:
+        var: include_status.stat
+
+    - name: Listar contenido específico de include si existe
+      command: ls -la {{ lynis_home }}/include/
+      register: include_listing
+      when: include_status.stat.exists
+      ignore_errors: yes
+
+    - name: Mostrar contenido de include
+      debug:
+        var: include_listing.stdout_lines
+      when: include_status.stat.exists
+
+    - name: Verificar el script principal de lynis
+      stat:
+        path: "{{ lynis_home }}/lynis"
+      register: lynis_script
+
+    - name: Mostrar información del script lynis
+      debug:
+        var: lynis_script.stat
+
+    - name: Leer las primeras líneas del script lynis
+      command: head -20 {{ lynis_home }}/lynis
+      register: lynis_script_head
+      when: lynis_script.stat.exists
+
+    - name: Mostrar contenido del script
+      debug:
+        var: lynis_script_head.stdout_lines
+      when: lynis_script.stat.exists
+
+    - name: Buscar referencias a 'include' en el script
+      command: grep -n "include" {{ lynis_home }}/lynis
+      register: include_references
+      when: lynis_script.stat.exists
+      ignore_errors: yes
+
+    - name: Mostrar referencias a include
+      debug:
+        var: include_references.stdout_lines
+      when: lynis_script.stat.exists and include_references.rc == 0
+
+    - name: Verificar variable de entorno PWD
+      command: pwd
+      register: current_pwd
+      args:
+        chdir: "{{ lynis_home }}"
+
+    - name: Mostrar directorio actual
+      debug:
+        var: current_pwd.stdout
+
+    - name: Probar ejecución directa desde el directorio
+      command: ./lynis --version
+      register: direct_execution
+      args:
+        chdir: "{{ lynis_home }}"
+      ignore_errors: yes
+
+    - name: Mostrar resultado de ejecución directa
+      debug:
+        msg: 
+          - "Return code: {{ direct_execution.rc }}"
+          - "Stdout: {{ direct_execution.stdout }}"
+          - "Stderr: {{ direct_execution.stderr }}"
+
+    - name: Probar con bash explícito
+      command: bash ./lynis --version
+      register: bash_execution
+      args:
+        chdir: "{{ lynis_home }}"
+      ignore_errors: yes
+
+    - name: Mostrar resultado con bash
+      debug:
+        msg: 
+          - "Return code: {{ bash_execution.rc }}"
+          - "Stdout: {{ bash_execution.stdout }}"
+          - "Stderr: {{ bash_execution.stderr }}"
+
+    - name: Verificar shebang del script
+      command: head -1 {{ lynis_home }}/lynis
+      register: shebang_check
+
+    - name: Mostrar shebang
+      debug:
+        var: shebang_check.stdout
+
+    - name: Verificar que bash esté disponible
+      command: which bash
+      register: bash_location
+
+    - name: Mostrar ubicación de bash
+      debug:
+        var: bash_location.stdout
+
+    - name: Crear script de prueba simple
+      copy:
+        dest: "{{ lynis_home }}/test_script.sh"
+        content: |
+          #!/bin/bash
+          echo "Directorio actual: $(pwd)"
+          echo "Contenido del directorio:"
+          ls -la
+          echo "Verificando include:"
+          if [ -d "include" ]; then
+            echo "Directorio include existe"
+            ls -la include/
+          else
+            echo "Directorio include NO existe"
+          fi
+        mode: '0755'
+
+    - name: Ejecutar script de prueba
+      command: ./test_script.sh
+      register: test_output
+      args:
+        chdir: "{{ lynis_home }}"
+
+    - name: Mostrar salida del script de prueba
+      debug:
+        var: test_output.stdout_lines
