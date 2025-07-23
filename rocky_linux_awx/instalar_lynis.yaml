@@ -1,297 +1,166 @@
 ---
-# Playbook para instalar Lynis en Rocky Linux usando Git
-- name: Instalar y configurar Lynis en Rocky Linux
+# Playbook de diagnóstico para Lynis
+- name: Diagnóstico completo de instalación Lynis
   hosts: Desarrollo
   become: yes
   vars:
-    lynis_user: "lynis"
-    lynis_group: "lynis"
     lynis_home: "/opt/lynis"
-    lynis_config_dir: "/etc/lynis"
-    lynis_log_dir: "/var/log/lynis"
-    lynis_git_repo: "https://github.com/CISOfy/lynis.git"
-    lynis_version: "3.0.9"
 
   tasks:
-    # Actualizar el sistema
-    - name: Actualizar cache de paquetes
-      dnf:
-        update_cache: yes
-      tags: update
-
-    - name: Instalar paquetes base necesarios
-      dnf:
-        name:
-          - git
-          - wget
-          - tar
-          - gzip
-        state: present
-      tags: dependencies
-
-    # Crear usuario y grupo para Lynis
-    - name: Crear grupo lynis
-      group:
-        name: "{{ lynis_group }}"
-        state: present
-      tags: user_setup
-
-    - name: Crear usuario lynis
-      user:
-        name: "{{ lynis_user }}"
-        group: "{{ lynis_group }}"
-        home: "{{ lynis_home }}"
-        shell: /bin/bash
-        system: yes
-        create_home: no
-        state: present
-      tags: user_setup
-
-    # Crear directorios necesarios
-    - name: Crear directorio de configuración
-      file:
-        path: "{{ lynis_config_dir }}"
-        state: directory
-        owner: root
-        group: "{{ lynis_group }}"
-        mode: '0750'
-      tags: directories
-
-    - name: Crear directorio de logs
-      file:
-        path: "{{ lynis_log_dir }}"
-        state: directory
-        owner: "{{ lynis_user }}"
-        group: "{{ lynis_group }}"
-        mode: '0755'
-      tags: directories
-
-    # Limpiar instalación anterior si existe
-    - name: Verificar si existe instalación anterior
-      stat:
-        path: "{{ lynis_home }}"
-      register: lynis_existing
-      tags: install
-
-    - name: Hacer backup de configuración existente
-      copy:
-        src: "{{ lynis_config_dir }}/custom.prf"
-        dest: "{{ lynis_config_dir }}/custom.prf.backup"
-        remote_src: yes
-      when: lynis_existing.stat.exists
-      ignore_errors: yes
-      tags: install
-
-    - name: Eliminar directorio anterior de Lynis
-      file:
-        path: "{{ lynis_home }}"
-        state: absent
-      when: lynis_existing.stat.exists
-      tags: install
-
-    # Clonar Lynis desde Git
-    - name: Clonar repositorio de Lynis
-      git:
-        repo: "{{ lynis_git_repo }}"
-        dest: "{{ lynis_home }}"
-        version: "{{ lynis_version }}"
-        force: yes
-      tags: install
-
-    - name: Cambiar propietario del directorio Lynis
-      file:
-        path: "{{ lynis_home }}"
-        owner: "{{ lynis_user }}"
-        group: "{{ lynis_group }}"
-        recurse: yes
-      tags: install
-
-    - name: Hacer ejecutable el script principal de Lynis
-      file:
-        path: "{{ lynis_home }}/lynis"
-        mode: '0755'
-        owner: "{{ lynis_user }}"
-        group: "{{ lynis_group }}"
-      tags: permissions
-
-    # Verificar estructura después de la clonación
-    - name: Verificar estructura de directorios críticos
-      stat:
-        path: "{{ item }}"
-      register: critical_dirs
-      loop:
-        - "{{ lynis_home }}/include"
-        - "{{ lynis_home }}/db"
-        - "{{ lynis_home }}/plugins"
-        - "{{ lynis_home }}/lynis"
-      tags: verify
-
-    - name: Mostrar estado de estructura crítica
+    - name: Verificar sistema operativo
       debug:
-        msg: "{{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
-      loop: "{{ critical_dirs.results }}"
-      tags: verify
+        msg: 
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "Kernel: {{ ansible_kernel }}"
+          - "Architecture: {{ ansible_architecture }}"
 
-    - name: Verificar archivos en directorio include
+    - name: Verificar estructura completa del directorio Lynis
       find:
-        paths: "{{ lynis_home }}/include"
-        patterns: "*"
-      register: include_contents
-      tags: verify
+        paths: "{{ lynis_home }}"
+        recurse: yes
+        file_type: any
+      register: all_lynis_files
+
+    - name: Mostrar todos los archivos y directorios
+      debug:
+        msg: "{{ all_lynis_files.files | map(attribute='path') | sort }}"
+
+    - name: Verificar permisos del directorio principal
+      stat:
+        path: "{{ lynis_home }}"
+      register: lynis_main_dir
+
+    - name: Mostrar información detallada del directorio principal
+      debug:
+        var: lynis_main_dir.stat
+
+    - name: Verificar si include es un enlace simbólico o directorio
+      stat:
+        path: "{{ lynis_home }}/include"
+      register: include_status
+
+    - name: Mostrar información de include
+      debug:
+        var: include_status.stat
+
+    - name: Listar contenido específico de include si existe
+      command: ls -la {{ lynis_home }}/include/
+      register: include_listing
+      when: include_status.stat.exists
+      ignore_errors: yes
 
     - name: Mostrar contenido de include
       debug:
-        msg: "Archivos en include: {{ include_contents.files | length }} archivos encontrados"
-      tags: verify
+        var: include_listing.stdout_lines
+      when: include_status.stat.exists
 
-    # Configurar Lynis
-    - name: Copiar archivo de configuración por defecto
-      copy:
-        src: "{{ lynis_home }}/default.prf"
-        dest: "{{ lynis_config_dir }}/custom.prf"
-        remote_src: yes
-        owner: root
-        group: "{{ lynis_group }}"
-        mode: '0640'
-        backup: yes
-        force: no
-      tags: config
+    - name: Verificar el script principal de lynis
+      stat:
+        path: "{{ lynis_home }}/lynis"
+      register: lynis_script
 
-    - name: Configurar parámetros personalizados en custom.prf
-      lineinfile:
-        path: "{{ lynis_config_dir }}/custom.prf"
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        create: yes
-      loop:
-        - { regexp: '^config:colored=', line: 'config:colored=yes' }
-        - { regexp: '^config:auditor=', line: 'config:auditor=System Administrator' }
-        - { regexp: '^config:log_file=', line: 'config:log_file={{ lynis_log_dir }}/lynis.log' }
-        - { regexp: '^config:report_file=', line: 'config:report_file={{ lynis_log_dir }}/lynis-report.dat' }
-      tags: config
-
-    # Crear enlace simbólico para uso global
-    - name: Eliminar enlace simbólico anterior si existe
-      file:
-        path: "/usr/local/bin/lynis"
-        state: absent
-      tags: symlink
-
-    - name: Crear enlace simbólico en /usr/local/bin
-      file:
-        src: "{{ lynis_home }}/lynis"
-        dest: "/usr/local/bin/lynis"
-        state: link
-      tags: symlink
-
-    # Configurar logrotate
-    - name: Configurar logrotate para logs de Lynis
-      copy:
-        dest: "/etc/logrotate.d/lynis"
-        content: |
-          {{ lynis_log_dir }}/*.log {
-              daily
-              missingok
-              rotate 30
-              compress
-              delaycompress
-              notifempty
-              create 644 {{ lynis_user }} {{ lynis_group }}
-          }
-        owner: root
-        group: root
-        mode: '0644'
-      tags: logrotate
-
-    # Verificar instalación final
-    - name: Probar Lynis desde el directorio de instalación
-      command: "{{ lynis_home }}/lynis --version"
-      become_user: "{{ lynis_user }}"
-      register: lynis_version_output
-      changed_when: false
-      tags: verify
-
-    - name: Mostrar versión instalada
+    - name: Mostrar información del script lynis
       debug:
-        msg: "Lynis instalado correctamente: {{ lynis_version_output.stdout_lines }}"
-      tags: verify
+        var: lynis_script.stat
 
-    - name: Probar comando global de Lynis
-      command: lynis --version
-      register: lynis_global_test
-      changed_when: false
-      tags: verify
+    - name: Leer las primeras líneas del script lynis
+      command: head -20 {{ lynis_home }}/lynis
+      register: lynis_script_head
+      when: lynis_script.stat.exists
 
-    - name: Crear script de ejemplo para auditoría
-      copy:
-        dest: "/usr/local/bin/lynis-audit"
-        content: |
-          #!/bin/bash
-          # Script para ejecutar auditoría de Lynis
-          
-          LYNIS_HOME="{{ lynis_home }}"
-          LYNIS_CONFIG="{{ lynis_config_dir }}/custom.prf"
-          LYNIS_USER="{{ lynis_user }}"
-          
-          echo "Ejecutando auditoría de seguridad con Lynis..."
-          echo "Fecha: $(date)"
-          echo "Usuario: $LYNIS_USER"
-          echo "Configuración: $LYNIS_CONFIG"
-          echo "----------------------------------------"
-          
-          cd $LYNIS_HOME
-          sudo -u $LYNIS_USER ./lynis audit system --profile $LYNIS_CONFIG
-          
-          echo "----------------------------------------"
-          echo "Auditoría completada. Revisa los logs en {{ lynis_log_dir }}/"
-        owner: root
-        group: root
-        mode: '0755'
-      tags: script
+    - name: Mostrar contenido del script
+      debug:
+        var: lynis_script_head.stdout_lines
+      when: lynis_script.stat.exists
 
-    # Ejecutar primera auditoría (opcional)
-    - name: Ejecutar primera auditoría de sistema
-      command: "{{ lynis_home }}/lynis audit system --profile {{ lynis_config_dir }}/custom.prf"
-      become_user: "{{ lynis_user }}"
+    - name: Buscar referencias a 'include' en el script
+      command: grep -n "include" {{ lynis_home }}/lynis
+      register: include_references
+      when: lynis_script.stat.exists
+      ignore_errors: yes
+
+    - name: Mostrar referencias a include
+      debug:
+        var: include_references.stdout_lines
+      when: lynis_script.stat.exists and include_references.rc == 0
+
+    - name: Verificar variable de entorno PWD
+      command: pwd
+      register: current_pwd
       args:
         chdir: "{{ lynis_home }}"
-      register: lynis_audit_result
-      when: run_initial_audit | default(false)
-      tags: 
-        - audit
-        - never
 
-    - name: Mostrar información final de instalación
+    - name: Mostrar directorio actual
       debug:
-        msg: |
-          ====================================================
-          Lynis instalado exitosamente en Rocky Linux!
-          ====================================================
-          
-          Información de instalación:
-          - Versión: {{ lynis_version }}
-          - Directorio: {{ lynis_home }}
-          - Usuario: {{ lynis_user }}
-          - Configuración: {{ lynis_config_dir }}/custom.prf
-          - Logs: {{ lynis_log_dir }}/
-          
-          Comandos disponibles:
-          - lynis --version                    # Ver versión
-          - lynis --help                       # Ver ayuda
-          - lynis audit system                 # Auditoría básica
-          - lynis-audit                        # Script personalizado
-          
-          Para ejecutar auditoría completa:
-          sudo /usr/local/bin/lynis-audit
-          
-          o manualmente:
-          cd {{ lynis_home }}
-          sudo -u {{ lynis_user }} ./lynis audit system --profile {{ lynis_config_dir }}/custom.prf
-          ====================================================
-      tags: verify
+        var: current_pwd.stdout
 
-  handlers:
-    - name: restart rsyslog
-      service:
-        name: rsyslog
-        state: restarted
+    - name: Probar ejecución directa desde el directorio
+      command: ./lynis --version
+      register: direct_execution
+      args:
+        chdir: "{{ lynis_home }}"
+      ignore_errors: yes
+
+    - name: Mostrar resultado de ejecución directa
+      debug:
+        msg: 
+          - "Return code: {{ direct_execution.rc }}"
+          - "Stdout: {{ direct_execution.stdout }}"
+          - "Stderr: {{ direct_execution.stderr }}"
+
+    - name: Probar con bash explícito
+      command: bash ./lynis --version
+      register: bash_execution
+      args:
+        chdir: "{{ lynis_home }}"
+      ignore_errors: yes
+
+    - name: Mostrar resultado con bash
+      debug:
+        msg: 
+          - "Return code: {{ bash_execution.rc }}"
+          - "Stdout: {{ bash_execution.stdout }}"
+          - "Stderr: {{ bash_execution.stderr }}"
+
+    - name: Verificar shebang del script
+      command: head -1 {{ lynis_home }}/lynis
+      register: shebang_check
+
+    - name: Mostrar shebang
+      debug:
+        var: shebang_check.stdout
+
+    - name: Verificar que bash esté disponible
+      command: which bash
+      register: bash_location
+
+    - name: Mostrar ubicación de bash
+      debug:
+        var: bash_location.stdout
+
+    - name: Crear script de prueba simple
+      copy:
+        dest: "{{ lynis_home }}/test_script.sh"
+        content: |
+          #!/bin/bash
+          echo "Directorio actual: $(pwd)"
+          echo "Contenido del directorio:"
+          ls -la
+          echo "Verificando include:"
+          if [ -d "include" ]; then
+            echo "Directorio include existe"
+            ls -la include/
+          else
+            echo "Directorio include NO existe"
+          fi
+        mode: '0755'
+
+    - name: Ejecutar script de prueba
+      command: ./test_script.sh
+      register: test_output
+      args:
+        chdir: "{{ lynis_home }}"
+
+    - name: Mostrar salida del script de prueba
+      debug:
+        var: test_output.stdout_lines
