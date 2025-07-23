@@ -1,24 +1,27 @@
 ---
-- name: Instalar y ejecutar Lynis en Rocky Linux
+- name: Instalar Lynis desde el repositorio oficial de CISOfy
   hosts: Desarrollo
   become: yes
   tasks:
 
-    - name: Instalar EPEL (Extra Packages for Enterprise Linux)
-      yum:
-        name: epel-release
+    - name: Instalar yum-utils (para yum-config-manager)
+      dnf:
+        name: yum-utils
         state: present
 
-    - name: Instalar Lynis
-      yum:
+    - name: Agregar repositorio oficial de Lynis
+      command: >
+        yum-config-manager
+        --add-repo https://packages.cisofy.com/community/lynis/rpm/
+      args:
+        creates: /etc/yum.repos.d/packages_cisofy_com_community_lynis_rpm_.repo
+
+    - name: Importar clave GPG de CISOfy
+      rpm_key:
+        state: present
+        key: https://packages.cisofy.com/keys/cisofy-software.asc
+
+    - name: Instalar Lynis desde el repositorio de CISOfy
+      dnf:
         name: lynis
         state: present
-
-    - name: Ejecutar auditoría con Lynis
-      command: lynis audit system
-      register: lynis_result
-      ignore_errors: yes  # Por si lanza advertencias, que no falle el playbook
-
-    - name: Mostrar resumen de resultados
-      debug:
-        msg: "{{ lynis_result.stdout_lines }}"
