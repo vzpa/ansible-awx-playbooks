@@ -1,0 +1,25 @@
+---
+- name: Instalar herramienta de prueba en Rocky Linux
+  hosts: 192.168.99.22
+  become: true
+  tasks:
+
+    - name: Asegurar que el sistema esté actualizado
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Instalar htop
+      yum:
+        name: htop
+        state: present
+
+    - name: Verificar que htop se haya instalado correctamente
+      command: which htop
+      register: htop_check
+      changed_when: false
+
+    - name: Mostrar la ruta de htop
+      debug:
+        var: htop_check.stdout
+
