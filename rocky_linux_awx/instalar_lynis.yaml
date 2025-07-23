@@ -1,6 +1,6 @@
 ---
 - name: Instalar y ejecutar Lynis en Rocky Linux
-  hosts: rocky
+  hosts: 192.168.99.22
   become: yes
   tasks:
 
