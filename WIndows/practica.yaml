@@ -1,7 +1,6 @@
 ---
 - name: Trabajar con windows. Instalar un paquete
   hosts: Windows
-  
   tasks:
 
   - name: Descargar Apache
@@ -9,33 +8,32 @@
       url: https://archive.apache.org/dist/httpd/binaries/win32/httpd-2.2.25-win32-x86-no_ssl.msi
       dest: c:\temp2\apache.msi
 
-
-  - name: Instalar  Apache
+  - name: Instalar Apache
     ansible.windows.win_package:
       path: c:\temp2\apache.msi
       state: present
-  
- 
+
   - name: Configurar apache para poder arrancarlo
     ansible.windows.win_lineinfile:
-      path: C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf
+      path: 'C:\Program Files (x86)\Apache Software Foundation\Apache2.2\conf\httpd.conf'
       regex: '^ServerAdmin '
-      line: 'ServerAdmin admin@miempresa.com'  
- 
+      line: 'ServerAdmin admin@miempresa.com'
+
   - name: Convertir Apache en un servicio
     ansible.windows.win_command:  
-      cmd: cmd.exe / c '"c:\Program Files (x86)\Apache Software Foundation\Apache2.2\bin\httpd.exe" "-k  install"'
-     
-  - name:  Cambiar pagina WEB
+      cmd: cmd.exe /c "\"C:\Program Files (x86)\Apache Software Foundation\Apache2.2\bin\httpd.exe\" -k install"
+
+  - name: Cambiar pagina WEB
     ansible.windows.win_copy:
-      content: <h1> Prueba de Ansible en Windows </h1>
-      dest: C:\Program Files (x86)\Apache Software Foundation\Apache2.2\htdocs\index.html
-  
-  - name: Parar el servicio de   Apache
+      content: '<h1> Prueba de Ansible en Windows </h1>'
+      dest: 'C:\Program Files (x86)\Apache Software Foundation\Apache2.2\htdocs\index.html'
+
+  - name: Parar el servicio de Apache
     ansible.windows.win_service:
       name: Apache2.2
       state: stopped
+
   - name: Arrancar el servicio de Apache
     ansible.windows.win_service:
       name: Apache2.2
-      state: started  
+      state: started
