@@ -1,7 +1,6 @@
 ---
 - name: Trabajar con windows. Instalar un paquete
-  hosts: 
-      - 192.168.99.19
+  hosts: Windows
   
   tasks:
 
